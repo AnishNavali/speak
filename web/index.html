@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Speak — a local voice notepad</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="/">speak<span>.</span></a>
+    <span class="local-label">LOCAL VOICE NOTEPAD</span>
+    <span id="model-status" class="model-status">Checking Gemma…</span>
+  </header>
+  <main>
+    <section class="intro">
+      <p class="eyebrow">A LITTLE LESS TYPING</p>
+      <h1>Say what’s on your mind.</h1>
+      <p>Speak naturally. Gemma turns your words into writing, right here on your computer.</p>
+    </section>
+    <section class="notepad" aria-label="Voice notepad">
+      <div class="note-toolbar">
+        <label for="note">Your notepad</label>
+        <div class="actions">
+          <span id="saved">Saved on this device</span>
+          <button id="copy" type="button">Copy</button>
+          <button id="download" type="button">Export .txt</button>
+        </div>
+      </div>
+      <textarea id="note" dir="auto" spellcheck="true" placeholder="An idea, a message, a first draft. Start speaking, or just type…" aria-label="Your editable note"></textarea>
+      <div class="note-footer"><span id="word-count">0 words</span><span>Original language. Your own voice.</span></div>
+    </section>
+    <section class="dictation" aria-label="Dictation controls">
+      <div class="recording-info">
+        <div id="meter" class="meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div><p id="status" role="status" aria-live="polite">Ready when you are</p><p id="detail">Click the microphone to begin.</p></div>
+      </div>
+      <span id="timer" class="timer">00:00</span>
+      <button id="record" class="primary" type="button" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="9" y="2" width="6" height="13" rx="3" fill="currentColor"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span id="record-label">Start speaking</span>
+      </button>
+    </section>
+    <p class="shortcut">Start / stop with <kbd>⌘</kbd> <kbd>Shift</kbd> <kbd>Space</kbd> <span>while this page is focused.</span></p>
+    <div id="error" class="error" role="alert" hidden></div>
+    <div id="recovery" class="recovery" hidden>
+      <button id="retry" type="button">Retry processing</button>
+      <button id="use-raw" type="button">Insert raw transcript</button>
+      <button id="save-audio" type="button">Save recording</button>
+      <button id="discard" type="button">Discard dictation</button>
+    </div>
+    <details id="transcript-panel">
+      <summary>Last dictation <span>Raw transcript & undo</span></summary>
+      <textarea id="raw" dir="auto" readonly aria-label="Raw transcript" placeholder="Your unedited words will appear here."></textarea>
+      <button id="undo" type="button" disabled>Undo last insertion</button>
+    </details>
+  </main>
+</body>
+</html>

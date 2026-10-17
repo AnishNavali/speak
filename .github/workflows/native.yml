@@ -1,0 +1,52 @@
+name: Native checks and unsigned packages
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: macos-15, target: aarch64-apple-darwin}
+          - {os: macos-15, target: x86_64-apple-darwin}
+          - {os: windows-2022, target: x86_64-pc-windows-msvc}
+          - {os: ubuntu-24.04, target: x86_64-unknown-linux-gnu}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.94.1
+        with:
+          targets: ${{ matrix.target }}
+          components: rustfmt, clippy
+      - uses: actions/setup-node@v4
+        with: {node-version: '24'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libssl-dev librsvg2-dev libayatana-appindicator3-dev libasound2-dev libxkbcommon-dev libdbus-1-dev libvulkan1
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --locked -p speak -- -D warnings
+      - run: cargo test --locked -p speak
+      - run: node --test tests/*.test.mjs
+        shell: bash
+      - run: python -m unittest discover -s tests
+      - name: Isolated target-specific runtimes
+        run: python scripts/bundle-runtime.py --target ${{ matrix.target }}
+      - run: python scripts/release.py configure --target ${{ matrix.target }}
+      - name: Package (unsigned; not a public release)
+        run: npx --yes @tauri-apps/cli@2.12.3 build --target ${{ matrix.target }} --config target/release-config.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/release/bundle/**/*.dmg
+            target/${{ matrix.target }}/release/bundle/**/*.exe
+            target/${{ matrix.target }}/release/bundle/**/*.deb
+            target/${{ matrix.target }}/release/bundle/**/*.rpm
+            target/${{ matrix.target }}/release/bundle/**/*.AppImage

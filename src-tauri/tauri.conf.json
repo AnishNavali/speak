@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Speak",
+  "version": "0.1.0",
+  "identifier": "app.speak.local",
+  "build": { "frontendDist": "../web" },
+  "app": {
+    "macOSPrivateApi": true,
+    "withGlobalTauri": true,
+    "windows": [
+      { "label": "main", "title": "Speak — Settings", "url": "desktop.html", "width": 880, "height": 820, "minWidth": 540, "minHeight": 600 },
+      { "label": "indicator", "title": "Speak microphone", "url": "indicator.html", "width": 260, "height": 64, "visible": false, "decorations": false, "resizable": false, "maximizable": false, "alwaysOnTop": true, "skipTaskbar": true, "focus": false, "focusable": false, "acceptFirstMouse": true, "transparent": true, "backgroundColor": "#00000000", "windowEffects": { "effects": ["liquidGlassClear", "popover", "acrylic"], "state": "active", "radius": 32 } }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src ipc: http://ipc.localhost; object-src 'none'; frame-src 'none'",
+      "capabilities": [{ "identifier": "desktop", "windows": ["main", "indicator"], "permissions": ["core:default", "core:window:allow-start-dragging", "dialog:allow-open", "dialog:allow-save"] }]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.png", "icons/icon.ico"],
+    "resources": ["runtime/", "../LICENSE", "../THIRD_PARTY_NOTICES.md"],
+    "windows": { "webviewInstallMode": { "type": "embedBootstrapper" }, "nsis": { "installMode": "currentUser" } },
+    "macOS": { "minimumSystemVersion": "13.3", "infoPlist": "Info.plist", "entitlements": "Entitlements.plist" },
+    "linux": { "deb": { "depends": ["libasound2", "libxkbcommon0", "libvulkan1"] } }
+  }
+}

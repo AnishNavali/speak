@@ -1,0 +1,18 @@
+models/
+__pycache__/
+.DS_Store
+target/
+dist/
+*.p12
+*.pfx
+*.p8
+*.key
+*.key.pub
+src-tauri/gen/
+src-tauri/runtime/*
+!src-tauri/runtime/README.txt
+src-tauri/icons/icon.png
+src-tauri/icons/icon.ico
+# Machine-local signing identity; never pin a developer's certificate in shared config.
+src-tauri/tauri.macos.conf.json
+.gstack/

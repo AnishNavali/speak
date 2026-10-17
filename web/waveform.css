@@ -1,0 +1,6 @@
+.waveform{width:64px;height:32px;flex-shrink:0;overflow:hidden;color:var(--wave-color,currentColor);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.waveform svg{display:block;width:200%;height:100%;pointer-events:none;animation:wave-travel 1.6s linear infinite paused}
+.waveform path{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;transform:scaleY(var(--wave-level,.08));transform-origin:center;transform-box:fill-box;transition:transform 100ms ease-out}
+body[data-phase=recording] .waveform svg{animation-play-state:running}
+@keyframes wave-travel{to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.waveform svg{animation:none}.waveform path{transition:none;transform:scaleY(.4)}}
