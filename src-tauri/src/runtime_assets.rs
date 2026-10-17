@@ -66,10 +66,10 @@ pub fn probe_cuda_driver() -> CudaDriver {
             }
             Some(driver)
         })();
-        return CudaDriver {
+        CudaDriver {
             available: detected.is_some(),
             version: detected,
-        };
+        }
     }
     #[cfg(not(any(windows, target_os = "linux")))]
     CudaDriver::default()
