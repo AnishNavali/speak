@@ -68,12 +68,13 @@ pub fn target() -> Result<Target> {
                 1,
             )?
             .reply()?;
+        let focus = connection.get_input_focus()?.reply()?.focus;
         Ok(Target(
             reply
                 .value32()
                 .and_then(|mut values| values.next())
                 .map(u64::from),
-            Some(u64::from(connection.get_input_focus()?.reply()?.focus)),
+            Some(u64::from(focus)),
             None,
         ))
     }

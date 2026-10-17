@@ -4,7 +4,7 @@ import { test } from "node:test";
 import vm from "node:vm";
 import { encodeWav, joinSamples } from "../web/audio.js";
 
-test("dictation preserves the note on failure, retries without retranscribing, and undoes insertion", async () => {
+for (const newline of ["\n", "\r\n"]) test(`dictation preserves the note on failure, retries without retranscribing, and undoes insertion (${newline === "\n" ? "LF" : "CRLF"})`, async () => {
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) elements.set(id, {
@@ -32,7 +32,8 @@ test("dictation preserves the note on failure, retries without retranscribing, a
     },
   };
   vm.createContext(sandbox);
-  const source = readFileSync(new URL("../web/app.js", import.meta.url), "utf8").replace(/^import .*;\n/, "");
+  const source = readFileSync(new URL("../web/app.js", import.meta.url), "utf8")
+    .replace(/\r?\n/g, newline).replace(/^import .*;\r?\n/, "");
   vm.runInContext(source, sandbox);
   await vm.runInContext(`
     session = { chunks: [{ wav: new ArrayBuffer(44), text: null }], audio: [],
