@@ -64,6 +64,24 @@ class ReleaseCheck(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "requires --public"):
                 release.configure("aarch64-apple-darwin", False, os_signing=True)
 
+    def test_cargo_metadata_is_utf8_even_on_cp1252_windows(self):
+        package = {"id": "fixture", "name": "fixture", "version": "0.1.0",
+                   "license": "MIT", "repository": "https://example.test/ā"}
+        metadata = json.dumps({"resolve": {"nodes": [{"id": "fixture"}]}, "packages": [package]}, ensure_ascii=False).encode("utf-8")
+        check_output = release.subprocess.check_output
+
+        def cargo_output(command, **kwargs):
+            self.assertEqual(command[:2], ["cargo", "metadata"])
+            kwargs.setdefault("encoding", "cp1252")
+            return check_output([sys.executable, "-c", f"import sys; sys.stdout.buffer.write({metadata!r})"], **kwargs)
+
+        with tempfile.TemporaryDirectory() as temp, patch.object(release, "ROOT", Path(temp)), \
+                patch.object(release, "version", return_value="0.1.0"), \
+                patch.object(release.subprocess, "check_output", side_effect=cargo_output):
+            release.configure("x86_64-pc-windows-msvc", False)
+            licenses = json.loads((Path(temp) / "target/dependency-licenses.json").read_text())
+            self.assertEqual(licenses[0]["repository"], package["repository"])
+
     def test_mac_runtime_signing_is_explicitly_ad_hoc_or_developer_id(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()

@@ -68,7 +68,7 @@ def configure(target, public, os_signing=False):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(config, indent=2))
     # Include the exact dependency/license metadata with the release downloads.
-    metadata = json.loads(subprocess.check_output(["cargo", "metadata", "--locked", "--filter-platform", target, "--format-version", "1"], cwd=ROOT, text=True))
+    metadata = json.loads(subprocess.check_output(["cargo", "metadata", "--locked", "--filter-platform", target, "--format-version", "1"], cwd=ROOT, text=True, encoding="utf-8"))
     resolved = {node["id"] for node in metadata["resolve"]["nodes"]}
     licenses = [{key: package.get(key) for key in ("name", "version", "license", "repository")}
                 for package in metadata["packages"] if package["id"] in resolved]
