@@ -21,7 +21,17 @@ require a verified cryptographic signature.
 
 ## First recording
 
-In Settings, download the default **Q4 + BF16 audio** model pair (about 3.83 GB).
+On first launch, choose **Download and set up** in **Welcome to Speak** to get the
+default **Q4 + BF16 audio** model pair (about 3.83 GB). The app shows download
+progress, verifies the files, and starts the model. **Use existing model files**
+opens Settings for importing a pair you already have; **Later** defers setup until
+the next launch. During setup, **Continue in background** closes the prompt while
+the download continues. Errors offer a download resume or startup retry.
+
+Existing installations with both configured files present skip the prompt. You
+can also download/resume manually from Settings, including in older installers
+without the welcome screen.
+
 After setup finishes, focus a text field and hold **F5**, speak, then release to
 insert your words. On Macs using media keys, use **Fn + F5** or configure another
 shortcut. You can also hold the floating microphone or use the test notepad.

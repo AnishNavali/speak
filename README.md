@@ -1,8 +1,6 @@
-
-
-# Speak.
-
 <img src="docs/media/logo.png" alt="Speak logo" width="80" height="80">
+
+# Speak
 
 **Hold a key. Speak naturally. Your words appear where you're typing.**
 
@@ -27,12 +25,12 @@ https://github.com/user-attachments/assets/11d62b96-b051-4f86-8d68-9d49f6dbcde5
 Choose your computer below. You don't need programming tools or terminal commands
 to install the Mac or Windows app.
 
-| Your computer | Download |
-|---|---|
+| Your computer                       | Download                                                                                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Mac with an Apple chip, M1 or newer | **[Download for Mac — Apple Silicon](https://github.com/AnishNavali/speak/releases/latest/download/Speak-macOS-AppleSilicon.dmg)** |
-| Mac with an Intel processor | **[Download for Mac — Intel](https://github.com/AnishNavali/speak/releases/latest/download/Speak-macOS-Intel.dmg)** |
-| Windows PC, 64-bit Intel or AMD | **[Download for Windows](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Windows-x64-Setup.exe)** |
-| Linux PC, 64-bit Intel or AMD | **[Download for Linux — AppImage](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Linux-x64.AppImage)** |
+| Mac with an Intel processor         | **[Download for Mac — Intel](https://github.com/AnishNavali/speak/releases/latest/download/Speak-macOS-Intel.dmg)**                |
+| Windows PC, 64-bit Intel or AMD     | **[Download for Windows](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Windows-x64-Setup.exe)**              |
+| Linux PC, 64-bit Intel or AMD       | **[Download for Linux — AppImage](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Linux-x64.AppImage)**        |
 
 Linux packages: [DEB](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Linux-x64.deb)
 · [RPM](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Linux-x64.rpm).
@@ -68,17 +66,24 @@ Work or school computers may prevent unsigned apps from running.
 ### 2. Set up your microphone and voice model
 
 1. Allow Speak to use your microphone when asked.
-2. In **Settings**, find **Or download a verified model**. Leave the default
-   **Q4 + BF16 audio** option selected and click **Download / resume**.
-   This downloads the files Speak needs to understand your voice, about **3.83 GB**.
+2. On first launch, the **Welcome to Speak** prompt offers **Download and set up**.
+   Click it to download the default voice model, about **3.83 GB**.
    Leave extra disk space for the app and any additional downloads.
-3. Wait for the download and startup to finish. Speak will show **Ready**.
+   Already have model files? Choose **Use existing model files** instead.
+3. Wait for download, verification, and startup, then click **Try the test notepad**.
+   Interrupted downloads offer **Retry / resume download**. You can choose
+   **Continue in background** while setup runs. If you choose **Later** before
+   downloading, open **Settings → Or download a verified model → Download / resume**
+   whenever you're ready; unfinished setup is offered again on the next launch.
 4. **On Mac**, click **Enable keyboard insertion…** and allow Speak in
    **System Settings → Privacy & Security → Accessibility**. This lets Speak put
    your words into other apps. On Linux, approve shortcut/input permissions if asked.
 
 You need an internet connection for the initial download. After setup, you can
 dictate offline. Speak chooses the available acceleration automatically.
+Installers do not contain the voice model. Existing installations with both model
+files present skip the welcome prompt. If you don't see the prompt in an older
+version, use the download controls in Settings or install a newer release.
 
 ### 3. Hold F5 and talk
 
@@ -110,15 +115,15 @@ and hold F5 or the **Hold to test** button.
 
 ## Need help?
 
-| What's happening? | What to try |
-|---|---|
-| F5 doesn't start a recording | Try holding the floating microphone. On Mac, try **Fn + F5**, or change the shortcut in Settings. |
-| Speak can't hear me | Check the **Microphone** choice in Settings and your computer's microphone permissions. |
-| My download stopped | Click **Download / resume** again. Speak keeps the partially downloaded files. |
-| Speak isn't ready | Let setup finish. If it reports an error, use **Start / restart Gemma** in Settings. Gemma is the voice model running on your computer. |
+| What's happening?                    | What to try                                                                                                                                                                                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| F5 doesn't start a recording         | Try holding the floating microphone. On Mac, try **Fn + F5**, or change the shortcut in Settings.                                                                                                                                                |
+| Speak can't hear me                  | Check the **Microphone** choice in Settings and your computer's microphone permissions.                                                                                                                                                          |
+| My download stopped                  | Click **Download / resume** again. Speak keeps the partially downloaded files.                                                                                                                                                                   |
+| Speak isn't ready                    | Let setup finish. If it reports an error, use **Start / restart Gemma** in Settings. Gemma is the voice model running on your computer.                                                                                                          |
 | My words don't appear in another app | Keep the destination focused until processing finishes. On Mac, check Accessibility permission and **Enable keyboard insertion…**. Try the test notepad to check recording separately. Some protected fields or apps won't accept inserted text. |
-| Processing failed | Use **Retry processing**. You can also copy the raw transcript or use **Save audio** before quitting. |
-| It works, but feels slow | Speed depends on your computer. Close other memory-heavy apps and try **Recheck acceleration** in Settings. |
+| Processing failed                    | Use **Retry processing**. You can also copy the raw transcript or use **Save audio** before quitting.                                                                                                                                            |
+| It works, but feels slow             | Speed depends on your computer. Close other memory-heavy apps and try **Recheck acceleration** in Settings.                                                                                                                                      |
 
 Still stuck? **[Report a problem](https://github.com/AnishNavali/speak/issues/new)**.
 Include your operating system, what you tried, and the error message shown in Speak.

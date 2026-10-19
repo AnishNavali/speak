@@ -3,6 +3,29 @@ const { listen } = window.__TAURI__.event;
 const $ = (id) => document.getElementById(id);
 let initialized = false, state, pendingPress, held = false, downloadingModel = false;
 let insertionPoint = [0, 0];
+let setupDismissed = false, setupFilesReady = false, setupStage = "welcome";
+
+function renderSetup() {
+  const dialog = $("setup-dialog"), ready = setupStage === "ready";
+  dialog.dataset.stage = setupStage;
+  $("setup-title").textContent = ready ? "You're ready to speak." : "Welcome to Speak.";
+  $("setup-description").hidden = ready;
+  $("setup-progress").hidden = !downloadingModel;
+  $("setup-download").disabled = downloadingModel || state?.phase === "updating";
+  $("setup-download").textContent = ready ? "Try the test notepad" : downloadingModel ? "Setting up…" : setupStage === "error" ? setupFilesReady ? "Retry startup" : "Retry / resume download" : "Download and set up · 3.83 GB";
+  $("setup-existing").disabled = downloadingModel || state?.phase === "updating";
+  $("setup-existing").textContent = ready ? "Open settings" : "Use existing model files";
+  $("setup-later").textContent = downloadingModel ? "Continue in background" : ready ? "Done" : "Later";
+  if (state?.model_setup_needed && !setupDismissed && !dialog.open) dialog.showModal();
+  if (!state?.model_setup_needed && !downloadingModel && setupStage === "welcome" && dialog.open) dialog.close();
+}
+function setupMessage(text) {
+  $("setup-status").textContent = $("download-status").textContent = text;
+}
+function dismissSetup() {
+  setupDismissed = true;
+  $("setup-dialog").close();
+}
 
 function notice(message) { $("notice").textContent = message || ""; }
 async function call(command, args = {}) {
@@ -47,6 +70,7 @@ function render(next) {
   $("note").readOnly = next.phase !== "idle";
   $("data-dir").textContent = `Local settings and runtime log: ${next.data_dir}`;
   if (!initialized) { fill(next.settings); initialized = true; }
+  renderSetup();
 }
 function saveNote() {
   try { localStorage.setItem("speak.desktop.note", $("note").value); $("saved").textContent = "Saved on this device"; }
@@ -103,18 +127,56 @@ $("autostart").onchange = async () => {
   try { await call("set_autostart", { enabled: $("autostart").checked }); }
   catch { $("autostart").checked = !$("autostart").checked; }
 };
-$("download-model").onclick = async () => {
+async function downloadModel(preset, resumeSetup = false) {
+  if (downloadingModel) return;
   downloadingModel = true;
+  if (!resumeSetup) setupFilesReady = false;
+  setupStage = setupFilesReady ? "starting" : "downloading";
+  $("setup-progress").value = 0;
   $("download-model").disabled = true;
-  $("download-status").textContent = "Downloading / verifying model files…";
+  setupMessage(setupFilesReady ? "Model files are saved. Retrying startup…" : "Downloading and verifying your voice model. You can resume if interrupted.");
+  renderSetup();
   try {
-    const settings = await call("download_model", { preset: $("preset").value });
-    fill(settings); $("download-status").textContent = "Files verified. Starting local inference…";
+    if (!setupFilesReady) {
+      const settings = await call("download_model", { preset });
+      fill(settings);
+      setupFilesReady = true;
+    }
+    setupStage = "starting";
+    $("setup-progress").removeAttribute("value");
+    setupMessage("Files verified. Starting your voice model…");
+    renderSetup();
     await call("start_model");
-    $("download-status").textContent = "Setup complete. Gemma is ready.";
-  } catch { $("download-status").textContent = "Setup incomplete. Downloaded files are retained; check the status above and retry."; }
-  finally { downloadingModel = false; $("download-model").disabled = state?.phase === "updating"; }
+    setupStage = "ready";
+    setupMessage(`Allow microphone access when asked, then hold ${state?.shortcut || "F5"} in the test notepad and speak. On Mac, enable keyboard insertion in Settings to dictate into other apps. If your Mac uses media keys, try Fn with the shortcut.`);
+  } catch (error) {
+    setupStage = "error";
+    setupMessage(`${String(error)}\n${setupFilesReady ? "Your model files are saved. Retry startup, or open Settings to check acceleration." : "Check your internet connection and free disk space, then retry to resume any saved download."}`);
+  } finally {
+    downloadingModel = false;
+    $("download-model").disabled = state?.phase === "updating";
+    renderSetup();
+  }
+}
+$("download-model").onclick = () => downloadModel($("preset").value);
+$("setup-download").onclick = () => {
+  if (setupStage === "ready") {
+    dismissSetup();
+    return call("open_test_ui").catch(() => {});
+  }
+  return downloadModel("q4", true);
 };
+$("setup-existing").onclick = async () => {
+  dismissSetup();
+  try {
+    await call("open_settings");
+    $("settings-panel").open = true;
+    $(setupStage === "ready" ? "enable-input" : "model").focus();
+    notice(setupStage === "ready" ? "Enable keyboard insertion to dictate into other apps. Allow microphone access when asked." : "Choose your Gemma model and matching audio projector, then Save settings and Start / restart Gemma.");
+  } catch { /* Error stays visible in Settings. */ }
+};
+$("setup-later").onclick = dismissSetup;
+$("setup-dialog").addEventListener("cancel", (event) => { event.preventDefault(); dismissSetup(); });
 $("check-update").onclick = async () => {
   $("check-update").disabled = true;
   $("update-status").textContent = "Checking release channel…";
@@ -163,7 +225,9 @@ await listen("speak-test-result", ({ payload }) => {
   note.setSelectionRange(cursor, cursor); saveNote();
 });
 await listen("speak-download", ({ payload }) => {
-  $("download-status").textContent = `${payload.file}: ${(payload.received / payload.total * 100).toFixed(1)}%`;
+  const percent = Math.min(100, payload.received / payload.total * 100);
+  $("setup-progress").value = percent;
+  setupMessage(`${payload.file.startsWith("mmproj-") ? "Audio support" : "Voice model"}: ${percent.toFixed(1)}% downloaded. Files are verified before use.`);
 });
 await listen("speak-update", ({ payload }) => {
   $("update-status").textContent = payload.total ? `Downloading update: ${(payload.received / payload.total * 100).toFixed(0)}%` : `Downloading update: ${(payload.received / 1024 / 1024).toFixed(1)} MB`;

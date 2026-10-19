@@ -22,4 +22,11 @@
 <div class="download"><label for="preset">Or download a verified model</label><select id="preset"><option value="q4">Q4 + BF16 audio · 3.83 GB</option><option value="q4-small">Q4 + Q8 audio · 3.40 GB</option><option value="q8">Q8 + BF16 audio · 5.95 GB</option></select><button id="download-model">Download / resume</button><p id="download-status" role="status"></p></div>
 <p class="hint">macOS needs Microphone and Accessibility permissions. Wayland asks for shortcut and input-control access through your desktop. Model downloads require internet; dictation stays local.</p><p id="data-dir" class="hint"></p></details>
 <details><summary>Application updates</summary><p class="hint">Checks GitHub Releases only when requested. Updates preserve downloaded models and restart Speak after dictation is finished.</p><div class="recovery"><button id="check-update">Check for updates</button><button id="install-update" disabled>Install update & restart</button></div><p id="update-status" class="hint" role="status"></p></details>
-</main></body></html>
+</main>
+<dialog id="setup-dialog" aria-labelledby="setup-title" aria-describedby="setup-description">
+<p class="eyebrow">LOCAL VOICE DICTATION</p><h1 id="setup-title">Welcome to Speak.</h1>
+<p id="setup-description">Download the voice model to start dictating. About 3.83 GB for the default Q4 + BF16 audio model. Internet is needed for setup; dictation works offline afterward.</p>
+<progress id="setup-progress" max="100" value="0" hidden aria-label="Voice model setup progress"></progress>
+<p id="setup-status" role="status" aria-live="polite"></p>
+<div class="setup-actions"><button id="setup-download" class="primary" autofocus>Download and set up · 3.83 GB</button><button id="setup-existing">Use existing model files</button><button id="setup-later">Later</button></div>
+</dialog></body></html>

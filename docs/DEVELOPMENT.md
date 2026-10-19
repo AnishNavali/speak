@@ -92,8 +92,12 @@ uses the configured local key, never runs those binaries, and deletes them after
 
 ### First use
 
-1. Choose existing Gemma GGUF and matching projector files, or select a download
-   preset in Settings. Q4/BF16 is the default; development discovers those files in `models/`.
+1. When either configured model file is missing, the desktop welcome dialog offers
+   **Download and set up** (Q4/BF16), import via Settings, or session-only dismissal.
+   It reuses the existing resumable, verified downloader and automatically starts
+   the runtime. Startup retries reuse downloaded files. Existing file pairs skip
+   the dialog; development discovers Q4/BF16 files in `models/`. Packaged apps use
+   their application-data models directory instead. Settings retains all presets.
 2. Start Gemma if it is not already loading. Speak uses a private local port and
    random API key, so another model server can use port 8080 independently.
 3. Settings has an **Open test notepad** button; you can also open it from Speak's

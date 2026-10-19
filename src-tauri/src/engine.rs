@@ -49,6 +49,7 @@ pub struct Snapshot {
     pub session_id: Option<u64>,
     pub phase: String,
     pub ready: bool,
+    pub model_setup_needed: bool,
     pub input_ready: bool,
     pub model_status: String,
     pub message: String,
@@ -115,6 +116,7 @@ impl Core {
                 session_id: None,
                 phase: "idle".into(),
                 ready: false,
+                model_setup_needed: settings.needs_model_setup(),
                 input_ready: false,
                 model_status: "Choose model files to begin".into(),
                 message: "Hold the shortcut to dictate".into(),
@@ -869,7 +871,11 @@ pub fn save_settings(core: State<'_, Arc<Core>>, settings: Settings) -> CommandR
     if let Err(error) = config::save(&core.data_dir, &settings) {
         return Err(error.to_string());
     }
-    core.state.lock().unwrap().settings = settings;
+    {
+        let mut state = core.state.lock().unwrap();
+        state.model_setup_needed = settings.needs_model_setup();
+        state.settings = settings;
+    }
     core.show_indicator(false);
     core.emit();
     Ok(())
@@ -963,7 +969,11 @@ impl Core {
         }
         config::save(&self.data_dir, &settings)?;
         *self.settings.lock().unwrap() = settings.clone();
-        self.state.lock().unwrap().settings = settings;
+        {
+            let mut state = self.state.lock().unwrap();
+            state.model_setup_needed = settings.needs_model_setup();
+            state.settings = settings;
+        }
         self.emit();
         Ok(())
     }

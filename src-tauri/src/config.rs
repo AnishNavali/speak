@@ -34,6 +34,12 @@ impl Default for Settings {
     }
 }
 
+impl Settings {
+    pub fn needs_model_setup(&self) -> bool {
+        !Path::new(&self.model).is_file() || !Path::new(&self.projector).is_file()
+    }
+}
+
 pub fn load(dir: &Path) -> Result<Settings> {
     let path = dir.join("settings.json");
     if path.exists() {
@@ -94,6 +100,24 @@ pub fn save(dir: &Path, settings: &Settings) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn model_setup_requires_both_files_and_rechecks_saved_paths() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut settings = Settings::default();
+        assert!(settings.needs_model_setup());
+        settings.model = dir.path().join("model.gguf").to_string_lossy().into_owned();
+        settings.projector = dir.path().join("audio.gguf").to_string_lossy().into_owned();
+        fs::write(&settings.model, b"GGUF").unwrap();
+        assert!(settings.needs_model_setup());
+        fs::write(&settings.projector, b"GGUF").unwrap();
+        assert!(!settings.needs_model_setup());
+        save(dir.path(), &settings).unwrap();
+        fs::remove_file(&settings.projector).unwrap();
+        assert!(load(dir.path()).unwrap().needs_model_setup());
+        settings.projector = dir.path().to_string_lossy().into_owned();
+        assert!(settings.needs_model_setup());
+    }
+
     #[test]
     fn default_push_to_talk_is_a_single_function_key() {
         let shortcut: tauri_plugin_global_shortcut::Shortcut =

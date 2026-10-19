@@ -141,7 +141,7 @@ fn main() {
                     window.hide()?;
                 }
             }
-            if !core.settings.lock().unwrap().model.is_empty() {
+            if !core.settings.lock().unwrap().needs_model_setup() {
                 let task = core.clone();
                 tauri::async_runtime::spawn(async move {
                     if let Err(error) = task.start_runtime().await {
