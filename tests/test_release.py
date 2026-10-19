@@ -113,6 +113,57 @@ class ReleaseCheck(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     release.repository()
 
+    def test_readme_downloads_match_collected_installers_and_versioned_updates(self):
+        fixtures = {
+            "aarch64-apple-darwin": {"dmg/Speak.dmg": "Speak-macOS-AppleSilicon.dmg",
+                                     "macos/Speak.app.tar.gz": "Speak_9.8.7_darwin-aarch64.app.tar.gz"},
+            "x86_64-apple-darwin": {"dmg/Speak.dmg": "Speak-macOS-Intel.dmg",
+                                   "macos/Speak.app.tar.gz": "Speak_9.8.7_darwin-x86_64.app.tar.gz"},
+            "x86_64-pc-windows-msvc": {"nsis/Speak.exe": "Speak-Windows-x64-Setup.exe"},
+            "x86_64-unknown-linux-gnu": {"appimage/Speak.AppImage": "Speak-Linux-x64.AppImage",
+                                        "deb/Speak.deb": "Speak-Linux-x64.deb", "rpm/Speak.rpm": "Speak-Linux-x64.rpm"},
+        }
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        def sign_or_verify(command, **kwargs):
+            if command[:len(release.CLI)] == release.CLI:
+                self.assertEqual(command[len(release.CLI):-1], ["signer", "sign", "--app-version", "9.8.7"])
+                Path(command[-1] + ".sig").write_text("fixture-signature")
+            else:
+                self.assertEqual(command[1], "--verify-update-signature")
+                self.assertEqual(Path(command[3]).read_text(), "fixture-signature")
+
+        with tempfile.TemporaryDirectory() as temp, patch.object(release, "ROOT", Path(temp)), \
+                patch.object(release, "version", return_value="9.8.7"), \
+                patch.object(release, "repository", return_value="AnishNavali/speak"), \
+                patch.dict(os.environ, {"TAURI_SIGNING_PRIVATE_KEY": "fixture-key"}), \
+                patch.object(release.subprocess, "run", side_effect=sign_or_verify):
+            root = Path(temp)
+            (root / "target").mkdir()
+            (root / "target/dependency-licenses.json").write_text("[]")
+            for target, assets in fixtures.items():
+                with self.subTest(target=target):
+                    for path in assets:
+                        source = root / "target" / target / "release/bundle" / path
+                        source.parent.mkdir(parents=True, exist_ok=True)
+                        source.write_bytes(b"installer fixture")
+                    release.collect(target)
+                    platform = release.TARGETS[target][0]
+                    output = root / "dist" / platform
+                    checksums = (output / f"SHA256SUMS-{platform}").read_text()
+                    for name in assets.values():
+                        self.assertEqual((output / name).read_bytes(), b"installer fixture")
+                        self.assertIn(f"{release.digest(output / name)}  {name}\n", checksums)
+                        if not name.endswith(".app.tar.gz"):
+                            self.assertIn(f"https://github.com/AnishNavali/speak/releases/latest/download/{name}", readme)
+                    update_name = next(name for name in assets.values() if name.endswith((".app.tar.gz", ".exe", ".AppImage")))
+                    manifest = json.loads((output / f"update-{platform}.json").read_text())
+                    self.assertEqual(manifest["version"], "9.8.7")
+                    self.assertEqual(manifest["platforms"][platform], {
+                        "url": f"https://github.com/AnishNavali/speak/releases/download/v9.8.7/{update_name}",
+                        "signature": "fixture-signature",
+                    })
+
     def test_complete_platform_manifest_and_checksums(self):
         with tempfile.TemporaryDirectory() as temp:
             input_dir, output = Path(temp) / "input", Path(temp) / "release"

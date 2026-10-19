@@ -17,6 +17,12 @@ TARGETS = {
     "x86_64-pc-windows-msvc": ("windows-x86_64", ["nsis"]),
     "x86_64-unknown-linux-gnu": ("linux-x86_64", ["appimage", "deb", "rpm"]),
 }
+INSTALLER_NAMES = {
+    "darwin-aarch64": "Speak-macOS-AppleSilicon",
+    "darwin-x86_64": "Speak-macOS-Intel",
+    "windows-x86_64": "Speak-Windows-x64-Setup",
+    "linux-x86_64": "Speak-Linux-x64",
+}
 CLI = ["npx", "--yes", "@tauri-apps/cli@2.12.3"]
 
 
@@ -100,7 +106,7 @@ def collect(target):
         expected_parent = {".app.tar.gz": "macos", ".AppImage": "appimage", ".dmg": "dmg", ".deb": "deb", ".rpm": "rpm", ".exe": "nsis"}[suffix]
         if source.parent.name != expected_parent:
             continue
-        name = f"Speak_{release_version}_{platform_key}" + ("_setup" if suffix == ".exe" else "") + suffix
+        name = (f"Speak_{release_version}_{platform_key}" if suffix == ".app.tar.gz" else INSTALLER_NAMES[platform_key]) + suffix
         destination = output / name
         if destination.exists():
             raise ValueError(f"Ambiguous or stale release output: {destination}; clean dist first")

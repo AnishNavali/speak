@@ -5,14 +5,16 @@
 The source includes four-target build workflows, isolated GPU/CPU runtimes,
 automatic CUDA setup, verified resumable downloads, and a signed updater. This is
 release infrastructure, not evidence that every GPU/desktop combination works.
-This workspace is not yet a Git repository and no GitHub repository was supplied.
-Nothing has been committed, pushed, or published.
+The source repository is [AnishNavali/speak](https://github.com/AnishNavali/speak).
+See [Actions](https://github.com/AnishNavali/speak/actions) for current checks and
+[Releases](https://github.com/AnishNavali/speak/releases) for published installers.
+Passing native checks creates workflow artifacts, not a public release.
 
 Public-release prerequisites still owned by the publisher:
 
-1. Create/select the actual public GitHub repository and push the source.
-2. Configure the updater signing key pair and the public key repository variable.
-3. Complete the real-device compatibility tests below before publishing the draft.
+1. Configure the updater signing key pair and the public key repository variable.
+2. Complete the real-device compatibility tests below before publishing the draft.
+3. Push a matching version tag, then review and publish the generated draft release.
 
 **Apple and Windows publisher signing are optional.** The initial release workflow
 defaults to unsigned beta installers. Mac bundles and their native helpers use
@@ -39,6 +41,25 @@ signing later. Models and settings use the same app-data locations in both modes
 | `x86_64-apple-darwin` | Intel Mac DMG | `darwin-x86_64` |
 | `x86_64-pc-windows-msvc` | Per-user NSIS setup EXE | `windows-x86_64` |
 | `x86_64-unknown-linux-gnu` | AppImage, DEB, RPM | `linux-x86_64` |
+
+User-facing installers have stable names so the README links keep working across
+versions:
+
+```text
+Speak-macOS-AppleSilicon.dmg
+Speak-macOS-Intel.dmg
+Speak-Windows-x64-Setup.exe
+Speak-Linux-x64.AppImage
+Speak-Linux-x64.deb
+Speak-Linux-x64.rpm
+```
+
+The README links to `releases/latest/download/<filename>`. These links become live
+when the first release containing these assets is published; update the README's
+first-release notice at that point. Upload installers as release assets, not Git
+source files. No duplicate installer aliases are generated. macOS updater archives
+keep versioned names; every updater URL still points to its exact version tag,
+and signatures bind the app version. Do not use mutable `latest` URLs in `latest.json`.
 
 Rust and sidecar targets are explicit; cross-building Intel Mac on an ARM runner
 must use the Intel llama.cpp archive, not the runner's architecture. Linux's first

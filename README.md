@@ -1,314 +1,144 @@
 # Speak
 
-A Rust/Tauri push-to-talk desktop app, plus the original web notepad for model
-experiments. One local Gemma 4 E2B model handles transcription and polishing.
-The native app owns its inference process; installed users do not need Python,
-Node.js, Homebrew, or a separate llama.cpp installation.
+**Hold a key. Speak naturally. Your words appear where you're typing.**
 
-## GitHub distribution
+Speak turns your voice into text and tidies up the result, right on your computer.
+Use it for messages, emails, notes, and other everyday writing. Your recordings
+are processed locally, without sending them to a cloud transcription service.
 
-Public release preparation and publisher configuration are documented in
-[docs/DISTRIBUTION.md](docs/DISTRIBUTION.md). The app source is MIT licensed.
-Four release targets are configured: Apple Silicon/Intel Mac, Windows x64, and
-Linux x64. Windows/Linux installers contain separate CPU/Vulkan runtimes and
-automatically acquire a pinned CUDA runtime for compatible NVIDIA devices.
-Releases default to **unsigned beta installers**: Apple Developer membership and
-Windows code-signing credentials are not required. See
-[beta installation instructions](docs/BETA_INSTALLATION.md) for OS warnings and setup.
-Publishing still requires your GitHub repository, free self-generated updater
-keys, and real-device validation. This workspace has not been published.
+**[Download](#download-speak) · [Watch the demo](#see-speak-in-action) · [Get started](#get-started) · [Need help?](#need-help)**
 
-## Native desktop app
+## See Speak in action
 
-### Build and open on this Mac
+Hold the shortcut, speak, and release to turn your words into text.
 
-The development build is at `target/debug/bundle/macos/Speak.app`:
+https://github.com/user-attachments/assets/11d62b96-b051-4f86-8d68-9d49f6dbcde5
 
-```sh
-open target/debug/bundle/macos/Speak.app
-```
+## Download Speak
 
-To rebuild from the project root (quit Speak first):
+> **The first public release is being prepared.** The direct download links below
+> will work once it is published. Check [all releases](https://github.com/AnishNavali/speak/releases)
+> for availability. Passing build checks does not publish the installers.
 
-```sh
-python3 scripts/configure-macos-signing.py
-python3 scripts/bundle-runtime.py
-npx --yes @tauri-apps/cli@2.12.3 build --debug --bundles app
-open target/debug/bundle/macos/Speak.app
-```
+Choose your computer below. You don't need programming tools or terminal commands
+to install the Mac or Windows app.
 
-The Python 3.12+ script is a **build-time packaging helper**, not an application runtime.
-It downloads a pinned llama.cpp release (`b11429`), checks the archive's SHA-256,
-and includes its executable, libraries, license, and shaders in the app resources.
-Use `--backend cpu` on supported Windows/Linux x64 builds for the CPU runtime.
-Without a prepared bundle, `cargo run -p speak` can use an installed `llama-server`
-in development. Settings can also select an explicit compatible executable.
+| Your computer | Download |
+|---|---|
+| Mac with an Apple chip, M1 or newer | **[Download for Mac — Apple Silicon](https://github.com/AnishNavali/speak/releases/latest/download/Speak-macOS-AppleSilicon.dmg)** |
+| Mac with an Intel processor | **[Download for Mac — Intel](https://github.com/AnishNavali/speak/releases/latest/download/Speak-macOS-Intel.dmg)** |
+| Windows PC, 64-bit Intel or AMD | **[Download for Windows](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Windows-x64-Setup.exe)** |
+| Linux PC, 64-bit Intel or AMD | **[Download for Linux — AppImage](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Linux-x64.AppImage)** |
 
-### Keep macOS Accessibility approval across rebuilds
+Linux packages: [DEB](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Linux-x64.deb)
+· [RPM](https://github.com/AnishNavali/speak/releases/latest/download/Speak-Linux-x64.rpm).
+Linux builds use Ubuntu 24.04 as their baseline; compatibility with other
+distributions can vary. Wayland support is experimental.
 
-Run `python3 scripts/configure-macos-signing.py` once to select an existing Apple
-Development or Developer ID Application certificate. It pins that certificate in
-the ignored, machine-local `src-tauri/tauri.macos.conf.json`. Tauri automatically
-merges this file on subsequent macOS bundle builds, including the `npx` command
-above. Other platforms and unsigned CI builds do not use your local identity.
-The helper never creates/exports keys and refuses to silently select a different
-certificate when the configured identity is missing. With multiple identities,
-use `--identity "certificate name or SHA-1"` to choose explicitly.
+Not sure which Mac you have? Open **Apple menu → About This Mac**. If it says
+**Chip: Apple M…**, choose Apple Silicon. If it says **Processor: Intel…**, choose Intel.
+Speak requires macOS **13.3 or later**.
 
-Ad-hoc builds authorize a changing binary hash; certificate-signed builds use a
-certificate-based code requirement and the stable `app.speak.local` identifier.
-When moving from the old ad-hoc app to the signed app, approve the new identity
-once: quit Speak, remove its old Accessibility entry, add the current Speak.app,
-enable it, then reopen Speak and enable keyboard insertion. Microphone permission
-may also need approval once for the new identity. Future builds must keep using
-the same signing identity and bundle identifier. Do not delete the local config
-or override `APPLE_SIGNING_IDENTITY` with a different certificate unintentionally.
+The installers are in this repository's **Releases** section. The green **Code**
+button and **Source code** ZIP files are for developers, not for installing Speak.
 
-Check a packaged app with:
+## Get started
 
-```sh
-codesign --verify --deep --strict --verbose=2 target/debug/bundle/macos/Speak.app
-codesign -dr - target/debug/bundle/macos/Speak.app
-SPEAK_SIGNING_TEST=1 python3 -m unittest discover -s tests -p 'test_macos_signing.py'
-```
+### 1. Install and open Speak
 
-The designated requirement should contain the app identifier and certificate
-conditions, not just `cdhash H"..."`. The app includes the audio-input entitlement
-needed for microphone use with the hardened runtime. Local development signing
-does not upload/notarize/publish the app or grant Accessibility automatically.
-On macOS, startup checks existing Accessibility authorization without prompting;
-when already granted, keyboard insertion initializes automatically. Test cross-app
-typing with the packaged Speak.app, not the unsigned executable from `cargo run`
-or a separate `tauri dev` process, which can have a different signing identity.
-The opt-in signing test signs two different temporary binaries, verifies both
-against the app's requirement, and checks that ad-hoc signatures fail it. The test
-uses the configured local key, never runs those binaries, and deletes them afterward.
+- **Mac:** open the downloaded `.dmg` file, drag **Speak** to **Applications**, then
+  open Speak from Applications.
+- **Windows:** open the downloaded `.exe` installer and follow the on-screen steps.
+- **Linux:** install the DEB/RPM for your distribution, or allow the AppImage to run
+  as a program in its file properties and open it.
 
-### First use
+**These are unsigned beta downloads.** Your computer may show an installation warning:
 
-1. Choose existing Gemma GGUF and matching projector files, or select a download
-   preset in Settings. Q4/BF16 is the default; development discovers those files in `models/`.
-2. Start Gemma if it is not already loading. Speak uses a private local port and
-   random API key, so another model server can use port 8080 independently.
-3. Settings has an **Open test notepad** button; you can also open it from Speak's
-   tray menu. Settings and the test notepad are separate views, and switching keeps
-   the note. Hold **F5**, speak, then release. A single function key works without modifiers;
-   choose another key or combination in Settings. On a Mac with media-key behavior,
-   use **Fn + F5** or enable standard function keys in keyboard settings. With Speak's window
-   focused with the test notepad open, text goes there. Settings itself does not
-   receive dictation. In another application, text is inserted
-   into the captured target field. The floating microphone is also press-and-hold;
-   on macOS it is a non-activating NSPanel, so clicking it leaves the destination app active.
-   Hold the **microphone icon** to record. Drag the **six-dot grip** or status label
-   to reposition the floating control. Dragging is separate from recording; saving
-   settings does not reset its position during the session.
-   The floating UI uses a rounded glass surface with light/dark and reduced-motion/
-   reduced-transparency styles. macOS 26+ uses native Liquid Glass; older macOS uses
-   native popover vibrancy, Windows uses Acrylic where available, and Linux uses
-   the translucent CSS fallback.
-4. macOS: grant **Microphone** permission when recording and use **Enable keyboard
-   insertion** to grant/check **Accessibility** permission before typing into other apps.
-   Microphone setup can take a moment; wait for the Listening indicator before speaking.
-5. Closing the settings/test window keeps the tray app running. Use **Quit Speak**
-   from its tray menu to quit and stop its model process. Launch-at-login is opt-in.
+- **Mac:** after attempting to open Speak, go to **System Settings → Privacy &
+  Security** and choose **Open Anyway** for Speak, if offered.
+- **Windows:** if SmartScreen appears, choose **More info → Run anyway**, if offered.
 
-The default runtime requires macOS 13.3+. Automatic acceleration prefers Metal
-on Mac, CUDA on compatible NVIDIA Windows/Linux devices, then Vulkan and an
-isolated CPU fallback. GPU setup needs a working graphics driver, not a developer
-SDK. Settings shows the selected backend and offers CPU-only/Recheck controls.
-The native capture path uses CoreAudio,
-WASAPI, or ALSA through CPAL; it runs independently of a webview's visibility.
+Work or school computers may prevent unsigned apps from running.
+[More installation details](docs/BETA_INSTALLATION.md).
 
-### Recording and recovery
+### 2. Set up your microphone and voice model
 
-- Only an active push-to-talk session opens the microphone. Release finishes capture,
-  transcribes pending segments, then polishes the complete transcript once.
-- Mono 16-bit WAV segments are bounded to 24 seconds, including unusually large
-  audio callbacks. Low-energy pauses can close segments after four seconds. The
-  pause threshold is adjustable for quiet/noisy microphones; this is not trained VAD.
-- The audio callback never runs inference. A separate worker owns the microphone,
-  and the asynchronous pipeline processes segments in order.
-- Escape cancels while recording on macOS/Windows/X11. The indicator/tray Cancel
-  action works without a global Escape binding; Escape in Speak's test window also
-  cancels. Wayland uses its portal shortcut's release event, plus the Cancel controls.
-- Capture ends after ten minutes. Missing audio callbacks for two seconds or a
-  capture overrun stops the session with a recoverable error (including after sleep).
-- On failure, pending audio and partial/raw/polished text stay in memory. Retry
-  skips successfully transcribed segments. Save Audio exports all retained segments.
-  A completed result can be inserted after a three-second focus-switch countdown.
-  Closing the window preserves pending data; quitting the app discards pending audio.
-- macOS tracks the focused Accessibility element; Windows tracks the foreground
-  window/control; X11 tracks the active/input-focus windows. A changed target blocks
-  insertion and retains the text. Moving the caret within the same field is not tracked.
-- Some Chromium/Electron fields, including web-page editors and integrated terminals,
-  return `AXErrorNoValue` instead of a focused element. macOS focus discovery reads
-  `AXRole` to initialize lazy accessibility support and retries the field query once.
-  If the field remains unavailable, recording proceeds with an application/window
-  guard. Keep the same destination focused: this fallback cannot detect switching
-  between fields inside that window. Known fields still require the same field at
-  insertion; denied permission and other AX errors remain errors. If neither window
-  nor field was available, text is retained for copying instead of auto-inserted.
-- macOS/Windows/X11 check physical modifier release before inserting. Wayland does
-  not expose equivalent global focus/key-state queries, so insertion there targets
-  the **currently focused field**; keep that field focused until processing completes.
-- Input uses Unicode text simulation, not manually sending an Enter/Submit key or
-  replacing the system clipboard. Some applications may interpret newlines differently;
-  verify target-app behavior. Target-app undo is the normal editor undo command.
-- Notes/settings persist locally; raw audio is not written to disk unless exported.
-  Runtime logs are in the application-data directory displayed in Settings and do
-  not intentionally include prompts, transcripts, or recordings.
+1. Allow Speak to use your microphone when asked.
+2. In **Settings**, find **Or download a verified model**. Leave the default
+   **Q4 + BF16 audio** option selected and click **Download / resume**.
+   This downloads the files Speak needs to understand your voice, about **3.83 GB**.
+   Leave extra disk space for the app and any additional downloads.
+3. Wait for the download and startup to finish. Speak will show **Ready**.
+4. **On Mac**, click **Enable keyboard insertion…** and allow Speak in
+   **System Settings → Privacy & Security → Accessibility**. This lets Speak put
+   your words into other apps. On Linux, approve shortcut/input permissions if asked.
 
-### Windows and Linux
+You need an internet connection for the initial download. After setup, you can
+dictate offline. Speak chooses the available acceleration automatically.
 
-`.github/workflows/native.yml` builds separate packages on macOS, Windows, and
-Ubuntu 24.04 from the shared source. Build/install dependencies are platform-specific:
+### 3. Hold F5 and talk
 
-- Windows: MSVC C++ build tools and the Windows SDK; Tauri uses WebView2.
-- Linux: WebKitGTK 4.1, GTK/AppIndicator, ALSA, xkbcommon, D-Bus, and Vulkan libraries.
-  The workflow lists the Ubuntu build packages.
-- Wayland shortcuts use the GlobalShortcuts portal, not the X11-only shortcut
-  plugin. Input uses Enigo's **experimental libei/RemoteDesktop-portal backend**;
-  the desktop must implement these portals. The permission dialog authorizes local
-  input simulation, not network remote access. GNOME and KDE need separate live tests.
-- Ordinary Windows applications can receive input; elevated/system applications
-  have OS integrity restrictions. Secure/password fields and unusual editors may
-  reject synthetic input on any platform; the result stays recoverable.
+1. Click where you want your words to appear, such as a blank note or email.
+2. **Hold F5**, wait for the recording indicator, and speak.
+3. **Release F5**. Keep the same text field focused while Speak finishes, then
+   your text appears.
 
-**Verification status:** the macOS debug bundle was built and launched, its bundled
-runtime became healthy, and the Rust audio-request/polishing pipeline passed a
-generated-speech smoke check. Microphone/hotkey/insertion permission flows still
-need hands-on validation. Windows/Linux build workflows are provided but have not
-run in this workspace. Local macOS builds can be development-signed as described
-above; CI packages remain unsigned without signing configuration. These are not
-notarized end-user releases.
+On Macs where function keys control system features, use **Fn + F5** or choose a
+different **Push-to-talk shortcut** in Settings and click **Save settings**.
 
-### Native checks
+Prefer using the mouse? **Hold the microphone icon** on the floating control and
+release it when you're done. The flowing wave responds to your voice. Use the
+six-dot grip to move the control around your screen.
 
-```sh
-cargo fmt --all -- --check
-cargo clippy -p speak -- -D warnings
-cargo test -p speak
-node --check web/desktop.js
-node --check web/indicator.js
-node --test tests/desktop.test.mjs
-```
+Want to try it first? Click **Open test notepad** in Speak, click inside the note,
+and hold F5 or the **Hold to test** button.
 
-On macOS, `cargo test` includes a real AppKit check that the microphone uses a
-non-activating NSPanel which cannot become the key or main window. It does not open
-the microphone or load a model. Physical click-to-dictate is still a hands-on check.
+## Everyday use
 
-Exercise the actual Rust inference path without recording or injecting keys:
+- **Speak naturally.** Speak transcribes your words and tidies punctuation and
+  spoken corrections. Review the result, especially names and numbers.
+- **Cancel a recording:** click **×** on the floating microphone or **Cancel** in Speak.
+- **Change your microphone or shortcut:** open Speak's **Settings** from its menu-bar
+  or system-tray icon, make the change, and click **Save settings**.
+- **Keep Speak handy:** closing its window leaves it running in the menu bar/system
+  tray. Choose **Quit Speak** from that menu to stop it completely.
+- **Start with your computer:** enable **Start Speak when I log in** in Settings.
 
-```sh
-cargo run -p speak -- --smoke-test /absolute/path/to/recording.wav
-```
+## Need help?
 
-This accepts mono 16-bit PCM WAV, up to 28 seconds, and starts/stops its own model
-process using the configured model files (Q4/BF16 by default). It prints the raw and polished outputs
-and elapsed inference time. The model's language, tone, correction, and emoji quality
-remain model-dependent. Model downloads are resumable and SHA-256 checked; the
-supported presets are Q8/BF16, Q4/BF16, and Q4/Q8-projector.
+| What's happening? | What to try |
+|---|---|
+| F5 doesn't start a recording | Try holding the floating microphone. On Mac, try **Fn + F5**, or change the shortcut in Settings. |
+| Speak can't hear me | Check the **Microphone** choice in Settings and your computer's microphone permissions. |
+| My download stopped | Click **Download / resume** again. Speak keeps the partially downloaded files. |
+| Speak isn't ready | Let setup finish. If it reports an error, use **Start / restart Gemma** in Settings. Gemma is the voice model running on your computer. |
+| My words don't appear in another app | Keep the destination focused until processing finishes. On Mac, check Accessibility permission and **Enable keyboard insertion…**. Try the test notepad to check recording separately. Some protected fields or apps won't accept inserted text. |
+| Processing failed | Use **Retry processing**. You can also copy the raw transcript or use **Save audio** before quitting. |
+| It works, but feels slow | Speed depends on your computer. Close other memory-heavy apps and try **Recheck acceleration** in Settings. |
 
-## Original web prototype
+Still stuck? **[Report a problem](https://github.com/AnishNavali/speak/issues/new)**.
+Include your operating system, what you tried, and the error message shown in Speak.
 
-## Run
+## Privacy and updates
 
-Requires Python 3.10+, a current browser with AudioWorklet support, and a llama.cpp
-build supporting **Gemma 4 audio input**. Model loading alone does not verify audio
-support; the first real recording will exercise that path.
+**Your voice is processed on your computer.** Speak contacts the internet to
+download its voice model, any needed acceleration files, and updates you request.
+It doesn't need a cloud transcription account.
 
-If loading fails with `unknown model architecture: 'gemma4'`, upgrade llama.cpp
-with `brew upgrade llama.cpp`. Homebrew build 8190 does not support this model;
-the updated 0.6.0_1 package was verified with audio transcription on this Mac.
+Recordings stay in memory unless you choose **Save audio**. Settings and test
+notepad text are saved on your device. Quitting Speak discards any pending recording;
+save or copy anything you need first.
 
-Download these files from
-[ggml-org/gemma-4-E2B-it-GGUF](https://huggingface.co/ggml-org/gemma-4-E2B-it-GGUF/tree/main)
-into `models/`:
+To update, open **Application updates → Check for updates** in Settings. Release
+builds verify update signatures before installing. You can also download the
+latest installer above. Models and settings are kept between updates; Mac users
+may need to approve Accessibility again during this unsigned beta period.
 
-- `gemma-4-E2B-it-Q8_0.gguf`
-- `mmproj-gemma-4-E2B-it-BF16.gguf`
+## Contributing and demos
 
-From the project directory, start Gemma in one terminal:
+- **Building or changing Speak:** see the [developer guide](docs/DEVELOPMENT.md).
+- **Preparing a release:** see the [distribution guide](docs/DISTRIBUTION.md).
+- **Adding a demo:** see the [demo recording guide](docs/media/README.md).
 
-```sh
-llama-server \
-  -m models/gemma-4-E2B-it-Q8_0.gguf \
-  --mmproj models/mmproj-gemma-4-E2B-it-BF16.gguf \
-  -ngl 99 -c 8192 -np 1 \
-  --reasoning off \
-  --host 127.0.0.1 --port 8080
-```
-
-Start the app in another terminal:
-
-```sh
-python3 server.py
-```
-
-Open **http://127.0.0.1:8000**. The UI also runs before the model is available and
-shows its status. Recording becomes usable when the model health check succeeds.
-Allow microphone access, click **Start speaking**, then **Stop & polish**.
-The shortcut is **Cmd/Ctrl + Shift + Space**, while the page is focused.
-
-Optional server settings: `PORT=8001 python3 server.py` or
-`LLAMA_URL=http://127.0.0.1:8081 python3 server.py`.
-
-## Behavior
-
-- Microphone audio is captured as mono PCM WAV, normally at 16 kHz. The browser
-  sends complete, independently decodable WAV segments, not broken MediaRecorder slices.
-- Segments end near low-energy pauses, or at about 24 seconds, below Gemma's
-  documented 30-second input limit. This simple energy detector is **not a trained VAD**;
-  constant noise or continuous speech can cause hard cuts mid-word. No quiet audio
-  is filtered out. Silence hallucinations and segment-boundary accuracy need real
-  model testing.
-- Audio segments are transcribed in order while you speak. After Stop, the same
-  model edits the entire assembled transcript once, so spoken corrections can cross
-  segment boundaries. Thinking is disabled and temperature is set to zero.
-- Original languages/scripts are requested, without translation or a language
-  allowlist. Actual recognition, mixed-language accuracy, and polishing quality
-  depend on Gemma and need evaluation.
-- The audio transcription prompt asks Gemma to use audible intonation and pauses
-  for questions, emphasis, and hesitation. That punctuation carries the delivery
-  into the text-only polishing step; this is not a separate emotion classifier.
-  Tone recognition is model-dependent and may miss subtle or sarcastic delivery.
-- Explicit emoji cues such as “smiling emoji” and “heart emoji” become symbols during
-  polishing. Existing emojis are preserved. Ordinary mentions of emojis remain words;
-  emojis are not automatically added just because the speaker sounds happy or sad.
-- Text is inserted at the selection saved at recording start. The note is read-only
-  during dictation/processing to avoid overwriting edits. Last-insertion undo is
-  available only if the note has not subsequently changed.
-- Notes are saved to this browser's localStorage. Recordings and raw transcripts
-  remain in memory, not on the server's disk. Refreshing/closing loses pending
-  audio; the browser warns while a dictation is unfinished. On failure you can
-  retry, save the full WAV, or insert raw text once **all** segments are transcribed.
-- Sessions stop automatically at ten minutes to bound audio memory. The polishing
-  endpoint accepts up to 8,000 characters; longer transcripts remain available for
-  raw insertion/export. Model context/output limits can also reject a long edit;
-  truncated output is not silently inserted.
-- Only local app origins can call the app API. Bind both servers to loopback.
-  No recordings/transcripts are included in application request logs.
-
-## Checks
-
-```sh
-python3 -m unittest discover -s tests
-node --test tests/*.test.mjs
-node --check web/app.js
-node --check web/recorder.js
-```
-
-These check WAV handling, API error/retry paths, prompt requests, truncation handling,
-and local-origin restrictions against a fake llama.cpp server. They do not measure
-Gemma's accuracy or speed. With both servers running, check actual Gemma editing:
-
-```sh
-SPEAK_LIVE_TEST=1 python3 -m unittest discover -s tests
-```
-
-This opt-in smoke check covers spoken date/number corrections, preserving apologies,
-Hindi script, and treating dictated commands as text. The local API was also verified
-with generated English speech: transcription preserved the words and polishing
-resolved a Friday-to-Monday correction. This is a smoke check, not a multilingual
-accuracy benchmark. Test microphone recordings, silence, mixed-language speech,
-and segment boundaries next.
+Speak's application code is [MIT licensed](LICENSE). Voice models and other
+components have their own terms; see [third-party notices](THIRD_PARTY_NOTICES.md).
