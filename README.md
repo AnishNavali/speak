@@ -1,6 +1,8 @@
-<img src="docs/media/logo.png" alt="Speak logo" width="80" height="80">
 
-# Speak
+
+# Speak.
+
+<img src="docs/media/logo.png" alt="Speak logo" width="80" height="80">
 
 **Hold a key. Speak naturally. Your words appear where you're typing.**
 
