@@ -106,7 +106,10 @@ and hold F5 or the **Hold to test** button.
 
 - **Speak naturally.** Speak transcribes your words and tidies punctuation and
   spoken corrections. Review the result, especially names and numbers.
-- **Cancel a recording:** click **×** on the floating microphone or **Cancel** in Speak.
+- **Close the floating microphone:** click **×**. This also cancels pending dictation.
+  To bring it back, click Speak's menu-bar/system-tray icon and select
+  **Show floating microphone**. You can also change this in Settings.
+- **Cancel without closing the microphone:** click **Cancel** in Speak or its tray menu.
 - **Change your microphone or shortcut:** open Speak's **Settings** from its menu-bar
   or system-tray icon, make the change, and click **Save settings**.
 - **Keep Speak handy:** closing its window leaves it running in the menu bar/system

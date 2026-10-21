@@ -16,7 +16,7 @@ use std::{
     time::Duration,
 };
 use tauri::{
-    menu::{Menu, MenuItem},
+    menu::{CheckMenuItem, Menu, MenuItem},
     tray::TrayIconBuilder,
     AppHandle, Emitter, Manager, State,
 };
@@ -94,6 +94,7 @@ pub struct Core {
     runtime_cancel: Mutex<CancellationToken>,
     cpu_recovery: AtomicBool,
     audio: OnceLock<std::sync::mpsc::Sender<audio::Command>>,
+    floating_menu: OnceLock<CheckMenuItem<tauri::Wry>>,
     input: std::sync::mpsc::Sender<platform::InputCommand>,
     session: Mutex<Option<Arc<Session>>>,
     sequence: AtomicU64,
@@ -135,6 +136,7 @@ impl Core {
             runtime_cancel: Mutex::new(CancellationToken::new()),
             cpu_recovery: AtomicBool::new(false),
             audio: OnceLock::new(),
+            floating_menu: OnceLock::new(),
             input: platform::input_worker(),
             session: Mutex::new(None),
             sequence: AtomicU64::new(1),
@@ -171,6 +173,14 @@ impl Core {
     pub fn setup_tray(self: &Arc<Self>) -> Result<()> {
         let show = MenuItem::with_id(&self.app, "show", "Settings…", true, None::<&str>)?;
         let test = MenuItem::with_id(&self.app, "test", "Open test notepad", true, None::<&str>)?;
+        let floating = CheckMenuItem::with_id(
+            &self.app,
+            "floating",
+            "Show floating microphone",
+            true,
+            self.settings.lock().unwrap().floating,
+            None::<&str>,
+        )?;
         let enable = MenuItem::with_id(
             &self.app,
             "input",
@@ -181,7 +191,11 @@ impl Core {
         let cancel =
             MenuItem::with_id(&self.app, "cancel", "Cancel dictation", true, None::<&str>)?;
         let quit = MenuItem::with_id(&self.app, "quit", "Quit Speak", true, None::<&str>)?;
-        let menu = Menu::with_items(&self.app, &[&show, &test, &enable, &cancel, &quit])?;
+        let menu = Menu::with_items(
+            &self.app,
+            &[&show, &test, &floating, &enable, &cancel, &quit],
+        )?;
+        let _ = self.floating_menu.set(floating);
         let core = self.clone();
         // A small RGBA waveform icon, generated in memory without an icon dependency.
         let mut rgba = vec![0u8; 32 * 32 * 4];
@@ -200,6 +214,13 @@ impl Core {
             .on_menu_event(move |app, event| match event.id.as_ref() {
                 "show" => core.show_view(View::Settings),
                 "test" => core.show_view(View::Test),
+                "floating" => {
+                    let visible = !core.settings.lock().unwrap().floating;
+                    if let Err(error) = core.set_floating(visible) {
+                        core.refresh_indicator();
+                        core.notice(format!("Could not change microphone visibility: {error:#}"));
+                    }
+                }
                 "input" => {
                     let core = core.clone();
                     tauri::async_runtime::spawn(async move {
@@ -414,7 +435,7 @@ impl Core {
             self.finish_capture(id);
             return Err(error.into());
         }
-        self.show_indicator(true);
+        self.refresh_indicator();
         self.emit();
         self.refresh_escape_binding();
         Ok(())
@@ -508,7 +529,7 @@ impl Core {
             state.phase = "error".into();
             state.message = message;
         }
-        self.show_indicator(false);
+        self.refresh_indicator();
         self.emit();
     }
 
@@ -651,7 +672,7 @@ impl Core {
         }
         drop(action);
         self.refresh_escape_binding();
-        self.show_indicator(false);
+        self.refresh_indicator();
         self.emit();
     }
 
@@ -672,12 +693,26 @@ impl Core {
         }
         drop(action);
         self.refresh_escape_binding();
-        self.show_indicator(false);
+        self.refresh_indicator();
         self.emit();
     }
 
-    fn show_indicator(&self, show: bool) {
-        let visible = show || self.settings.lock().unwrap().floating;
+    fn set_floating(&self, visible: bool) -> Result<()> {
+        let mut settings = self.settings.lock().unwrap().clone();
+        settings.floating = visible;
+        config::save(&self.data_dir, &settings)?;
+        self.settings.lock().unwrap().floating = visible;
+        self.state.lock().unwrap().settings.floating = visible;
+        self.refresh_indicator();
+        self.emit();
+        Ok(())
+    }
+
+    fn refresh_indicator(&self) {
+        let visible = self.settings.lock().unwrap().floating;
+        if let Some(item) = self.floating_menu.get() {
+            let _ = item.set_checked(visible);
+        }
         #[cfg(target_os = "macos")]
         crate::macos_panel::set_visible(&self.app, visible);
         #[cfg(not(target_os = "macos"))]
@@ -727,7 +762,7 @@ impl Core {
                 ));
             }
         }
-        self.show_indicator(false);
+        self.refresh_indicator();
     }
 
     pub fn show_view(&self, view: View) {
@@ -826,6 +861,12 @@ pub fn cancel(core: State<'_, Arc<Core>>) {
     core.cancel();
 }
 #[tauri::command]
+pub fn close_indicator(core: State<'_, Arc<Core>>) -> CommandResult<()> {
+    core.set_floating(false).map_err(message)?;
+    core.cancel();
+    Ok(())
+}
+#[tauri::command]
 pub fn discard(core: State<'_, Arc<Core>>) {
     core.cancel();
 }
@@ -876,7 +917,7 @@ pub fn save_settings(core: State<'_, Arc<Core>>, settings: Settings) -> CommandR
         state.model_setup_needed = settings.needs_model_setup();
         state.settings = settings;
     }
-    core.show_indicator(false);
+    core.refresh_indicator();
     core.emit();
     Ok(())
 }

@@ -14,7 +14,16 @@ async function release() {
   try { await pending; await invoke("release"); } catch { /* Error shown by state. */ }
 }
 button.onpointerup = release; button.onpointercancel = release; button.onlostpointercapture = release;
-document.getElementById("cancel").onclick = () => invoke("cancel");
+const closeButton = document.getElementById("cancel");
+closeButton.onclick = async () => {
+  if (closeButton.disabled) return;
+  closeButton.disabled = true;
+  held = false;
+  try { await pending; } catch { /* Close even if starting capture failed. */ }
+  try { await invoke("close_indicator"); }
+  catch (error) { label.textContent = "Unable to close"; label.title = String(error); }
+  finally { closeButton.disabled = false; }
+};
 function render(state) {
   document.body.dataset.phase = state.phase;
   if (state.phase !== "recording") document.getElementById("waveform").style.setProperty("--wave-level", ".08");
@@ -24,7 +33,6 @@ function render(state) {
   const text = state.phase === "idle" ? state.ready ? "Ready · hold mic" : starting ? "Starting…" : "Model offline" : state.phase;
   if (label.textContent !== text) label.textContent = text;
   label.title = state.ready ? state.notice || state.message : state.model_status;
-  document.getElementById("cancel").disabled = ["idle", "updating"].includes(state.phase);
 }
 document.addEventListener("pointermove", (event) => {
   document.body.style.setProperty("--shine-x", `${event.clientX}px`);

@@ -139,7 +139,11 @@ WASAPI, or ALSA through CPAL; it runs independently of a webview's visibility.
 - The audio callback never runs inference. A separate worker owns the microphone,
   and the asynchronous pipeline processes segments in order.
 - Escape cancels while recording on macOS/Windows/X11. The indicator/tray Cancel
-  action works without a global Escape binding; Escape in Speak's test window also
+  action in the tray works without a global Escape binding; the indicator's × now
+  cancels dictation and persists `floating=false`. Visibility respects that setting
+  during recording as well as idle. A checked **Show floating microphone** tray
+  item toggles and persists visibility without cancelling dictation; it stays in
+  sync with × and Settings. Escape in Speak's test window also
   cancels. Wayland uses its portal shortcut's release event, plus the Cancel controls.
 - Capture ends after ten minutes. Missing audio callbacks for two seconds or a
   capture overrun stops the session with a recoverable error (including after sleep).

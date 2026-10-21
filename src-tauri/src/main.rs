@@ -171,6 +171,7 @@ fn main() {
             engine::press,
             engine::release,
             engine::cancel,
+            engine::close_indicator,
             engine::retry,
             engine::discard,
             engine::save_audio,

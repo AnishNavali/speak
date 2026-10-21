@@ -67,6 +67,12 @@ test("settings open the test notepad without losing text; quick push-to-talk rel
   assert.equal(element("raw").value, "retained transcript");
   assert.equal(element("recovery").hidden, false);
   assert.equal(element("note").readOnly, true);
+  element("floating").checked = false;
+  events.get("speak-state")({ payload: initial });
+  assert.equal(element("floating").checked, false, "State updates preserve an unsaved preference edit");
+  element("floating").checked = true;
+  events.get("speak-state")({ payload: { ...initial, settings: { ...initial.settings, floating: false } } });
+  assert.equal(element("floating").checked, false, "Closing the floating mic updates its Settings checkbox");
 });
 
 async function setupHarness(overrides = {}, handler = async () => {}) {

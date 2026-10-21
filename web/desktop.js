@@ -39,6 +39,7 @@ function fill(settings) {
   $("acceleration").value = settings.acceleration || "auto";
 }
 function render(next) {
+  if (initialized && state?.settings.floating !== next.settings.floating) $("floating").checked = next.settings.floating;
   state = next;
   document.body.dataset.phase = next.phase;
   if (next.phase !== "recording") $("meter").style.setProperty("--wave-level", ".08");

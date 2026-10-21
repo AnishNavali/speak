@@ -3,11 +3,11 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import vm from "node:vm";
 
-test("recording wave responds to volume, resets on stop, and preserves quick-release recording", async () => {
+test("wave responds to volume; close works while idle and waits for capture before cancelling", async () => {
   const elements = new Map(), events = new Map(), calls = [];
   function element(id) {
     if (!elements.has(id)) elements.set(id, {
-      style: { setProperty(key, value) { this[key] = value; } },
+      disabled: false, style: { setProperty(key, value) { this[key] = value; } },
       setAttribute() {}, setPointerCapture() {},
     });
     return elements.get(id);
@@ -28,6 +28,9 @@ test("recording wave responds to volume, resets on stop, and preserves quick-rel
   await vm.runInNewContext(`(async () => { ${source}\n })()`, sandbox);
   const level = () => Number(element("waveform").style["--wave-level"]);
   assert.equal(level(), .08);
+  assert.equal(element("cancel").disabled, false);
+  await element("cancel").onclick();
+  assert.equal(calls.filter((call) => call === "close_indicator").length, 1);
   events.get("speak-state")({ payload: { ...idle, phase: "recording" } });
   events.get("speak-meter")({ payload: { level: .03 } });
   assert.equal(level(), .36);
@@ -46,4 +49,19 @@ test("recording wave responds to volume, resets on stop, and preserves quick-rel
   finishPress();
   await release;
   assert.equal(calls.filter((call) => call === "release").length, 1);
+  element("mic").onpointerdown({ preventDefault() {}, pointerId: 2 });
+  const close = element("cancel").onclick();
+  assert.equal(element("cancel").disabled, true);
+  events.get("speak-state")({ payload: { ...idle, phase: "recording" } });
+  assert.equal(element("cancel").disabled, true);
+  assert.equal(calls.filter((call) => call === "close_indicator").length, 1);
+  await element("mic").onpointerup();
+  finishPress();
+  await close;
+  assert.equal(calls.filter((call) => call === "close_indicator").length, 2);
+  assert.equal(calls.filter((call) => call === "release").length, 1);
+  events.get("speak-state")({ payload: { ...idle, ready: false } });
+  assert.equal(element("cancel").disabled, false);
+  await element("cancel").onclick();
+  assert.equal(calls.filter((call) => call === "close_indicator").length, 3);
 });
